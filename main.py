@@ -16,7 +16,15 @@ app = Dash(external_stylesheets=[dbc.themes.LUMEN])
 app.layout = [
     html.Div(
         children=[
-            html.H1(children="Title of Dash App", style={"textAlign": "center"}),
+            html.H1(
+                children="Dashboard จำนวนนักศึกษาที่จบมัธยมศึกษาปีที่ 6 ในปีการศึกษา 2566",
+                style={
+                    "textAlign": "center",
+                    "color": "rgba(255,255,255,1)",
+                    "font-weight": "700",
+                    "padding-top": "2rem",
+                },
+            ),
             html.Div(
                 html.Div(
                     children=dcc.Dropdown(
@@ -38,18 +46,42 @@ app.layout = [
                 style={
                     "display": "flex",
                     "width": "100%",
+                    "margin-top": "2rem",
                     # "justify-content": "space-around",
                 },
             ),
             html.Div(
-                children=[dcc.Graph(id="graph-map", style={"width": "100%"})],
+                children=[
+                    dcc.Graph(
+                        id="graph-map",
+                        style={
+                            "width": "100%",
+                            "height": "100%",
+                        },
+                    ),
+                    dcc.Graph(
+                        id="graph-pie",
+                        style={
+                            "width": "100%",
+                            "height": "100%",
+                        },
+                    ),
+                ],
                 style={
                     "width": "100%",
                     "height": "100%",
+                    "margin-top": "2rem",
+                    "display": "flex",
+                    "gap": "2rem",
                     # "justify-content": "space-around",
                 },
             ),
-        ]
+        ],
+        style={
+            "background": "rgb(4,0,79)",
+            "background": "linear-gradient(170deg, rgba(4,0,79,1) 0%, rgba(0,65,148,1) 100%)",
+            "width": "100%",
+        },
     )
 ]
 
@@ -69,7 +101,13 @@ def update_bar_graph(value):
         title=f"กราฟแสดงข้อมูลจำนวนนักเรียนที่จบการศึกษาในภาค {value_region}",
         barmode="group",
     )
-    fig.update_traces(textposition="outside")
+    fig.update_traces(
+        textposition="outside",
+    )
+    fig.update_layout(
+        # margin={"r": 25, "t": 35, "l": 25, "b": 25},
+        paper_bgcolor="rgba(255,255,255,0.5)",
+    )
     return fig
 
 
@@ -96,79 +134,46 @@ def update_map_graph(value):
                 # print(type(region_name[k]["long"]))
                 # print(df["lat"][idx], df["lon"][idx])
                 break
-    # print(df)
     value_region = province.REGIONS[value]
-    fig = go.Figure(
-        data=go.Scattergeo(
-            lon=long,
-            lat=lat,
-            text=df["schools_province"].astype(str)
-            + " : "
-            + df["totalstd"].astype(str)
-            + " คน",
-            mode="markers",
-            # hoverinfo="schools_province",
-            marker=dict(
-                size=8,
-                opacity=0.8,
-                reversescale=True,
-                autocolorscale=False,
-                line=dict(width=1, color="rgba(102, 102, 102)"),
-                colorscale="Blues",
-                cmin=0,
-                color=df["totalstd"],
-                cmax=df["totalstd"].max(),
-                colorbar_title="Incoming flights<br>February 2011",
-            ),
-        )
-    )
 
-    fig.update_layout(
-        title="Most trafficked US airports<br>(Hover for airport names)",
-        geo=dict(
-            scope="asia",
-            showland=True,
-            landcolor="rgb(212, 212, 212)",
-            countrywidth=0.5,
-            subunitwidth=0.5,
-            fitbounds="locations",
-        ),
+    fig = px.scatter_mapbox(
+        df,
+        lat="lat",
+        lon="lon",
+        hover_name="schools_province",
+        hover_data=["totalmale", "totalfemale"],
+        # color_discrete_sequence=["fuchsia"],
+        zoom=5,
     )
-    # fig = px.scatter_mapbox(
-    #     df,
-    #     lat="lat",
-    #     lon="lon",
-    #     hover_name="schools_province",
-    #     color_discrete_sequence=["fuchsia"],
-    #     zoom=5,
-    #     height=300,
-    # )
-    # fig.update_layout(
-    #     mapbox_style="white-bg",
-    #     mapbox_layers=[
-    #         {
-    #             "below": "traces",
-    #             "sourcetype": "raster",
-    #             "sourceattribution": "United States Geological Survey",
-    #             "source": [
-    #                 "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
-    #             ],
-    #         },
-    #         {
-    #             "sourcetype": "raster",
-    #             "sourceattribution": "Government of Canada",
-    #             "source": [
-    #                 "https://geo.weather.gc.ca/geomet/?"
-    #                 "SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&BBOX={bbox-epsg-3857}&CRS=EPSG:3857"
-    #                 "&WIDTH=1000&HEIGHT=1000&LAYERS=RADAR_1KM_RDBR&TILED=true&FORMAT=image/png"
-    #             ],
-    #         },
-    #     ],
-    #     # mapbox={
-    #     #     "accesstoken": mapbox_token,
-    #     # },
-    # )
-    fig.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0})
+    fig.update_layout(
+        mapbox_style="open-street-map", title=f"แผนที่แสดงตำแหน่งจังหวัดในภาค {value_region}"
+    )
+    fig.update_layout(
+        # margin={"r": 25, "t": 35, "l": 25, "b": 25},
+        paper_bgcolor="rgba(255,255,255,0.5)",
+    )
+    return fig
+
+
+@callback(Output("graph-pie", "figure"), Input("dropdown-selection", "value"))
+def update_pie_graph(value):
+    df = api.get_std_2566()
+    region_name = province.PROVINCES[value]
+
+    provinces = [region_name[k]["name"] for k in region_name]
+    df = df[df["schools_province"].isin(provinces)]
+    value_region = province.REGIONS[value]
+    fig = px.pie(
+        df,
+        values="totalstd",
+        names="schools_province",
+        title="Population of European continent",
+        hover_data=["totalmale", "totalfemale"],
+    )
+    fig.update_layout(
+        # margin={"r": 25, "t": 35, "l": 25, "b": 25},
+        paper_bgcolor="rgba(255,255,255,0.5)",
+    )
     return fig
 
 
