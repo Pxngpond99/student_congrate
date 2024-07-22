@@ -78,8 +78,8 @@ app.layout = [
             ),
         ],
         style={
-            "background": "rgb(4,0,79)",
-            "background": "linear-gradient(170deg, rgba(4,0,79,1) 0%, rgba(0,65,148,1) 100%)",
+            "background": "rgb(148,243,244)",
+            "background": "radial-gradient(circle, rgba(148,243,244,1) 8%, rgba(255,255,255,1) 18%, rgba(70,173,223,1) 32%, rgba(155,178,219,1) 45%, rgba(15,10,116,1) 58%, rgba(84,208,192,1) 70%, rgba(4,1,62,1) 87%)",
             "width": "100%",
         },
     )
