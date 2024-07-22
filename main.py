@@ -32,6 +32,7 @@ app.layout = [
                         value="southern_region",
                         id="dropdown-selection",
                         style={"width": "100%"},
+                        clearable=False,
                     ),
                     style={
                         "justify-content": "center",
