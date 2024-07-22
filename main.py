@@ -167,7 +167,7 @@ def update_pie_graph(value):
         df,
         values="totalstd",
         names="schools_province",
-        title="Population of European continent",
+        title=f"กราฟวงกลมแสดงสัดส่วนของนักเรียนที่จบการศึกษาในภาค {value_region}",
         hover_data=["totalmale", "totalfemale"],
     )
     fig.update_layout(
